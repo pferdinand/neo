@@ -149,7 +149,7 @@ psns.string = psns.string || (function() {
       * @return true if the string is undefined, null or empty. */
     isEmpty: function(string) {
       return string === undefined || string === null || string === "";
-    },    
+    },
         
   }
 })();
@@ -190,6 +190,46 @@ psns.date = psns.date || (function() {
         
     },
     
+  }
+
+})();
+
+psns.number = psns.number || (function() {
+
+  var supportedLocales = {
+    "en-us": { decimal: ".", thousand: "," },
+    "fr-fr": { decimal: ",", thousand: " " }
+  };
+  var locale      = supportedLocales["en-us"];
+  var regInteger  = /(\d)(?=(\d\d\d)+(?!\d))/g;
+  
+  return {
+
+    /** Format a number as a sting
+      *
+      * @n       the number to format.
+      * @options formating options. can be undefined or an object with the 
+      *          values for the supported options:
+      *          - decimals: number of decimals to display.
+      * @example format(1236.3, {decimals: 2})) => 1,236.30 (with en-us locale) */
+    format: function(n, options) {
+    
+      var s = String(n).split(".");
+      var i = s[0].replace(regInteger, "$1" + locale.thousand);
+      if ( options !== undefined ) {
+        if ( options.decimals !== undefined ) {
+          s[1] = s[1] || "";
+          var d = s[1].substring(0, options.decimals);
+          if ( d.length < options.decimals ) {
+            d += "0000000000".substring(0, options.decimals-d.length);
+          }
+          
+          return i+locale.decimal+d;
+        }
+      }
+      
+      return i + locale.decimal + s[1];
+    }
   }
 
 })();

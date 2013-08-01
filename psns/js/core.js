@@ -205,12 +205,14 @@ psns.number = psns.number || (function() {
   
   return {
 
-    /** Format a number as a sting
+    /** Format a number as a string
       *
       * @n       the number to format.
       * @options formating options. can be undefined or an object with the 
       *          values for the supported options:
       *          - decimals: number of decimals to display.
+      *          - prefix:   a string to use to prefix the result.
+      *          - suffix:   a string to append a the end of the result.
       * @example format(1236.3, {decimals: 2})) => 1,236.30 (with en-us locale) */
     format: function(n, options) {
     
@@ -224,7 +226,15 @@ psns.number = psns.number || (function() {
             d += "0000000000".substring(0, options.decimals-d.length);
           }
           
-          return i+locale.decimal+d;
+          var r = i+locale.decimal+d;
+          if ( options.prefix != undefined ) {
+            r = options.prefix + r;
+          }
+          if ( options.suffix != undefined ) {
+            r = r + options.suffix;
+          }
+
+          return r;
         }
       }
       

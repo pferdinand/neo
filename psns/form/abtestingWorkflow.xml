@@ -1,0 +1,63 @@
+<form _cs="abtestingWorkflow (psns)" created="2013-07-23 16:18:34.663Z" createdBy-id="6464"
+      entitySchema="xtk:form" img="xtk:form.png" label="abtestingWorkflow" lastModified="2013-08-01 14:17:47.193Z"
+      md5="C7115726B3AAFEAB5BCFC808360B6388" modifiedBy-id="6464" name="abtestingWorkflow"
+      namespace="psns" xtkschema="xtk:form">
+  <createdBy _cs="Philippe Ferdinand (philippe.ferdinand)"/>
+
+  <form label="A/B testsing" name="abtest">
+    <input xpath="@label"/>
+  </form>
+
+  <container codepage="1252" name="lib">
+
+    <container codepage="1252" img="psns:abtesting16x16.png" name="abtesting">
+
+      <enter>
+        <set translatedExpr="[winningVersion/@version] + ' is the winning version with ' + [winningVersion/@score] + ' vs ' + [winningVersion/@othersScore]"
+             xpath="/ignored/abtest/@help"/>
+      </enter>
+      <input xpath="@label"/>
+      <input label="Test groups" type="separator"/>
+      <input editable="true" lineCount="4" nolabel="true" type="list" xpath="transitions/abtest"
+             zoom="false">
+        <form name="abtest" ref="psns:abtestingWorkflow:abtest"/>
+        <input colSize="8" label="Test group" xpath="@label"/>
+      </input>
+      <container propagateConstraints="false">
+        <input label="Do not hold the population for the winning version" xpath="transitions/abcomplement/@enabled"/>
+      </container>
+
+      <input label="Size of the test groups" type="separator"/>
+      <container colcount="2" margin-left="5">
+        <input checkedValue="percent" label="Use a percentage of the inbound population"
+               type="RadioButton" xpath="@testGroupSize"/>
+        <container type="visibleGroup" visibleIf="@testGroupSize='percent'">
+          <input nolabel="true" width="5" xpath="@testPercent"/>
+        </container>
+        <container type="visibleGroup" visibleIf="@testGroupSize!='percent'">
+          <static/>
+        </container>
+        <input checkedValue="limit" label="Use a subset of inbound population" type="RadioButton"
+               xpath="@testGroupSize"/>
+        <container type="visibleGroup" visibleIf="@testGroupSize='limit'">
+          <input nolabel="true" width="8" xpath="@testLimit"/>
+        </container>
+      </container>
+
+      <input label="Winner selection method and test duration" type="separator"/>
+      <container colcount="2">
+        <input label="Method" xpath="@method"/>
+        <input label="Duration" width="5" xpath="@duration"/>
+      </container>
+
+      <input label="Execution" type="separator"/>
+      <input type="value" xpath="@status"/>
+      <container backcolor="tooltip" type="visibleGroup" visibleIf="@status=2">
+        <input fontBold="true" margin="10" nolabel="true" type="value" xpath="/ignored/abtest/@help"/>
+      </container>
+
+    </container>
+
+  </container>
+
+</form>

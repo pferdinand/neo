@@ -1,0 +1,86 @@
+<srcSchema _cs="Workflows (psns)" created="2013-07-23 16:46:13.265Z" createdBy-id="0"
+           desc="Workflows definitions" entitySchema="xtk:srcSchema" extendedSchema="xtk:workflow"
+           img="xtk:workflow.png" label="Workflows" labelSingular="Workflow" lastModified="2013-07-30 13:09:47.233Z"
+           mappingType="sql" md5="F22B882D9030C837DBBAF0B529CC0966" modifiedBy-id="0"
+           name="abtestingWorkflow" namespace="psns" xtkschema="xtk:srcSchema">
+  <createdBy _cs="Philippe Ferdinand (philippe.ferdinand)"/>
+  <modifiedBy _cs="Philippe Ferdinand (philippe.ferdinand)"/>
+
+  <enumeration basetype="string" label="A/B testing method" name="abtestMethod">
+
+    <value label="Best open rate" value="estimatedRecipientOpenRatio"/>
+    <value label="Best click rate" value="recipientClickRatio"/>
+    <value label="Best reactivity (opens followed by clicks)" value="reactivity"/>
+    <value label="Lower user complains" value="refusedRatio"/>
+    <value label="Best conversion rate" value="transactionRatio"/>
+    <value label="Best web traffic post campaign" value="totalWebPage"/>
+    <value label="Lowest opt-out rate" value="optOutRatio"/>
+    <value label="Best revenues" value="amount"/>
+
+  </enumeration>
+
+  <enumeration basetype="string" label="A/B test size" name="abtestSize">
+    <value label="Percentage" value="percent"/>
+    <value label="Limit" value="limit"/>
+  </enumeration>
+
+  <enumeration basetype="byte" label="A/B test status" name="abtestStatus">
+    <value label="Not started" value="0"/>
+    <value label="Testing" value="1"/>
+    <value label="Finished" value="2"/>
+  </enumeration>
+
+  <element img="psns:abtesting48x48.png" label="A/B testing" name="abtesting" template="xtk:workflow:activity ">
+
+    <attribute default="'psns:abtesting48x48.png'" name="img"/>
+    <attribute default="'psns:abtesting.js'" name="library"/>
+    <attribute default="false" name="andJoin" type="boolean"/>
+    <attribute default="true" name="distributable" type="boolean"/>
+    <attribute default="3" name="syncMode" type="byte"/>
+
+    <attribute default="86400" desc="time to wait before the identification of the winning version"
+               label="Test duration" name="duration" type="timespan"/>
+
+    <attribute default="'estimatedRecipientOpenRatio'" desc="Method used to identify the winning version"
+               enum="abtestMethod" label="Method" name="method" type="string"/>
+
+    <attribute default="'percent'" label="Test group size" name="testGroupSize" type="string"/>
+    <attribute default="10" label="Test group (%)" name="testPercent" type="float"/>
+    <attribute default="5000" label="Test group" name="testLimit" type="long"/>
+    <attribute default="0" enum="abtestStatus" label="Status" name="status" type="byte"/>
+
+    <element label="Winning version" name="winningVersion">
+      <attribute label="Version" name="version" type="string"/>
+      <attribute label="Transition" name="transition" type="string"/>
+      <attribute label="Score" name="score" type="string"/>
+      <attribute label="Others scores" name="othersScore" type="string"/>
+    </element>
+
+    <element name="transitions">
+
+      <element name="abtest" template="xtk:workflow:transition" unbound="true">
+        <key name="name">
+          <keyfield xpath="@name"/>
+        </key>
+        <default>&lt;abtest label="A" name="test1" enabled="true"/&gt;
+          &lt;abtest label="B" name="test2" enabled="true"/&gt;</default>
+      </element>
+
+      <element name="abcomplement" template="xtk:workflow:transition">
+        <attribute name="label" translatedDefault="'Complement'"/>
+        <attribute default="false" name="enabled"/>
+      </element>
+
+    </element>
+  </element>
+
+  <element desc="Workflows definitions" img="xtk:workflow.png" label="Workflows"
+           labelSingular="Workflow" name="abtestingWorkflow">
+
+    <element name="activities">
+      <element name="abtesting" ref="abtesting" unbound="true"/>
+    </element>
+
+  </element>
+
+</srcSchema>

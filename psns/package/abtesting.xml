@@ -1,0 +1,608 @@
+﻿<?xml version='1.0'?>
+<package author="Philippe Ferdinand (philippe.ferdinand)" buildDate="2013-08-01 15:59:17.991Z"
+         buildNumber="8025" buildVersion="6.1" img="xtk:installedPackage.png" label="A/B testing worflow activity"
+         name="abtesting" namespace="psns" vendor="">
+  <entities schema="xtk:srcSchema">
+    <srcSchema desc="Workflows definitions" entitySchema="xtk:srcSchema" extendedSchema="xtk:workflow"
+               img="xtk:workflow.png" label="Workflows" labelSingular="Workflow"
+               name="abtestingWorkflow" namespace="psns" xtkschema="xtk:srcSchema">
+      <enumeration basetype="string" label="A/B testing method" name="abtestMethod">
+
+        <value label="Best open rate" value="estimatedRecipientOpenRatio"/>
+        <value label="Best click rate" value="recipientClickRatio"/>
+        <value label="Best reactivity (opens followed by clicks)" value="reactivity"/>
+        <value label="Lower user complains" value="refusedRatio"/>
+        <value label="Best conversion rate" value="transactionRatio"/>
+        <value label="Best web traffic post campaign" value="totalWebPage"/>
+        <value label="Lowest opt-out rate" value="optOutRatio"/>
+        <value label="Best revenues" value="amount"/>
+
+      </enumeration>
+
+      <enumeration basetype="string" label="A/B test size" name="abtestSize">
+        <value label="Percentage" value="percent"/>
+        <value label="Limit" value="limit"/>
+      </enumeration>
+
+      <enumeration basetype="byte" label="A/B test status" name="abtestStatus">
+        <value label="Not started" value="0"/>
+        <value label="Testing" value="1"/>
+        <value label="Finished" value="2"/>
+      </enumeration>
+
+      <element img="psns:abtesting48x48.png" label="A/B testing" name="abtesting"
+               template="xtk:workflow:activity ">
+
+        <attribute default="'psns:abtesting48x48.png'" name="img"/>
+        <attribute default="'psns:abtesting.js'" name="library"/>
+        <attribute default="false" name="andJoin" type="boolean"/>
+        <attribute default="true" name="distributable" type="boolean"/>
+        <attribute default="3" name="syncMode" type="byte"/>
+
+        <attribute default="86400" desc="time to wait before the identification of the winning version"
+                   label="Test duration" name="duration" type="timespan"/>
+
+        <attribute default="'estimatedRecipientOpenRatio'" desc="Method used to identify the winning version"
+                   enum="abtestMethod" label="Method" name="method" type="string"/>
+
+        <attribute default="'percent'" label="Test group size" name="testGroupSize"
+                   type="string"/>
+        <attribute default="10" label="Test group (%)" name="testPercent" type="float"/>
+        <attribute default="5000" label="Test group" name="testLimit" type="long"/>
+        <attribute default="0" enum="abtestStatus" label="Status" name="status" type="byte"/>
+
+        <element label="Winning version" name="winningVersion">
+          <attribute label="Version" name="version" type="string"/>
+          <attribute label="Transition" name="transition" type="string"/>
+          <attribute label="Score" name="score" type="string"/>
+          <attribute label="Others scores" name="othersScore" type="string"/>
+        </element>
+
+        <element name="transitions">
+
+          <element name="abtest" template="xtk:workflow:transition" unbound="true">
+            <key name="name">
+              <keyfield xpath="@name"/>
+            </key>
+            <default>&lt;abtest label="A" name="test1" enabled="true"/&gt;
+          &lt;abtest label="B" name="test2" enabled="true"/&gt;</default>
+          </element>
+
+          <element name="abcomplement" template="xtk:workflow:transition">
+            <attribute name="label" translatedDefault="'Complement'"/>
+            <attribute default="false" name="enabled"/>
+          </element>
+
+        </element>
+      </element>
+
+      <element desc="Workflows definitions" img="xtk:workflow.png" label="Workflows"
+               labelSingular="Workflow" name="abtestingWorkflow">
+
+        <element name="activities">
+          <element name="abtesting" ref="abtesting" unbound="true"/>
+        </element>
+
+      </element>
+
+    </srcSchema>
+  </entities>
+  <entities schema="xtk:form">
+    <form entitySchema="xtk:form" img="xtk:form.png" label="abtestingWorkflow" md5="031A1575BA05818D48750F321F647795"
+          name="abtestingWorkflow" namespace="psns" xtkschema="xtk:form">
+      <form label="A/B testsing" name="abtest">
+        <input xpath="@label"/>
+      </form>
+
+      <container codepage="1252" name="lib">
+
+        <container codepage="1252" img="psns:abtesting16x16.png" name="abtesting">
+
+          <enter>
+            <set translatedExpr="[winningVersion/@version] + ' is the winning version with ' + [winningVersion/@score] + ' vs ' + [winningVersion/@othersScore]"
+                 xpath="/ignored/abtest/@help"/>
+          </enter>
+          <input xpath="@label"/>
+          <input label="Test groups" type="separator"/>
+          <input editable="true" lineCount="4" nolabel="true" type="list" xpath="transitions/abtest"
+                 zoom="false">
+            <form name="abtest" ref="psns:abtestingWorkflow:abtest"/>
+            <input colSize="8" label="Test group" xpath="@label"/>
+          </input>
+          <container propagateConstraints="false">
+            <input label="Do not hold the population for the winning version" xpath="transitions/abcomplement/@enabled"/>
+          </container>
+
+          <input label="Size of the test groups" type="separator"/>
+          <container colcount="2" margin-left="5">
+            <input checkedValue="percent" label="Use a percentage of the inbound population"
+                   type="RadioButton" xpath="@testGroupSize"/>
+            <container type="visibleGroup" visibleIf="@testGroupSize='percent'">
+              <input nolabel="true" width="5" xpath="@testPercent"/>
+            </container>
+            <container type="visibleGroup" visibleIf="@testGroupSize!='percent'">
+              <static/>
+            </container>
+            <input checkedValue="limit" label="Use a subset of inbound population"
+                   type="RadioButton" xpath="@testGroupSize"/>
+            <container type="visibleGroup" visibleIf="@testGroupSize='limit'">
+              <input nolabel="true" width="8" xpath="@testLimit"/>
+            </container>
+          </container>
+
+          <input label="Winner selection method and test duration" type="separator"/>
+          <container colcount="2">
+            <input label="Method" xpath="@method"/>
+            <input label="Duration" width="5" xpath="@duration"/>
+          </container>
+
+          <input label="Execution" type="separator"/>
+          <input type="value" xpath="@status"/>
+          <container backcolor="tooltip" type="visibleGroup" visibleIf="@status=2">
+            <input fontBold="true" margin="10" nolabel="true" type="value" xpath="/ignored/abtest/@help"/>
+          </container>
+
+        </container>
+
+      </container>
+
+    </form>
+  </entities>
+  <entities schema="xtk:javascript">
+    <javascript entitySchema="xtk:javascript" img="xtk:javascript.png" label="abtesting.js"
+                name="abtesting.js" namespace="psns">
+      <data><![CDATA[/***************************************************************************
+ * A/B Testing Workflow Activity
+ * 
+ * 
+ * 
+ * Supported databases: PostgreSQL, Oracle
+ **************************************************************************/
+loadLibrary("psns:core.js");
+
+psns.abtesting  = psns.abtesting || (function() {
+
+  var methods = {
+    "estimatedRecipientOpenRatio":  { desc: "Open rate", format: "percent", keep: "max" },
+    "recipientClickRatio":          { desc: "Click rate", format: "percent", keep: "max" },
+    "reactivity":                   { desc: "Reactivity", format: "percent", keep: "max" },
+    "refusedRatio":                 { desc: "User complains", format: "percent", keep: "min" },
+    "transactionRatio":             { desc: "Conversion rate", format: "percent", keep: "max" },
+    "totalWebPage":                 { desc: "Web traffic", format: "value", keep: "max" },
+    "optOutRatio":                  { desc: "Opt-out rate", format: "percent", keep: "min" },
+    "amount":                       { desc: "Revenues", format: "value", keep: "max" }
+  }
+  
+  var formatOptions = {
+    "value":   { decimals: 0 },
+    "percent": { decimals: 2, suffix: "%" }
+  }
+  
+  var STATUS = { NOT_STARTED: 0, TESTING: 1, FINISHED: 2 };
+
+  var workflow = workflow || xtk.workflow.load(instance.id).toXML();
+
+  return {
+  
+    activityXml: function() {
+      return workflow.activities.abtesting.(@name == activity.name);
+    },
+    
+    /** Current status of the test.
+      * 
+      * @return NOT_STARTED, TESTING or FINISHED */
+    status: function() {
+      return instance.vars[activity.name + "_status"];
+    },
+    
+    /** Name of the working table of the population on hold
+      *
+      * @return the tableName of the population on hold */
+    targetOnHold: function() {
+      return instance.vars["tableName_" + activity.name];
+    },
+
+    /** Set the tablename of the population on hold */
+    holdTarget: function(tableName) {
+      instance.vars["tableName_" + activity.name] = tableName;
+    },
+
+    /** Get the test expiration date */
+    expirationDate: function() {
+      return instance.vars["expiration_" + activity.name];
+    },
+
+    /** Set the test expiration date */
+    setExpirationDate: function(date) {
+      instance.vars["expiration_" + activity.name] = date;
+    },
+
+    /** Check if the A/B transitions are going to a recurring delivery activity.
+      */
+    checkTransitions: function() {
+    
+      var errors = 0;
+      var xmlActivity = this.activityXml();
+      
+      for each (var abtest in xmlActivity.transitions.abtest) {
+      
+        var target = String(abtest.@target);
+        if ( target != "" && workflow.activities.deliveryRecurring.(@name == target).length() != 1 ) {
+          logWarning("The target of the transition '" + abtest.@label + "' must be a recurring delivery");
+          errors++;
+        }
+      
+      }
+      
+      if ( errors > 0 ) {
+        logError("Invalid configuration for the activity '" + activity.label + "'");
+      }
+    
+    },
+
+    /** Execute the A/B test
+      *
+      * @return the complement table name and the number of records in it. */    
+    test: function() {
+    
+      activity.status = STATUS.NOT_STARTED;
+      instance.vars[activity.name + "_status"]  = STATUS.NOT_STARTED;
+    
+      // reset all variables if necessar
+      activity.winningVersion.version           = "";
+      activity.winningVersion.transition        = "";
+      activity.winningVersion.score             = "";
+    
+      var inboundTableName = vars.tableName;
+      
+      var testGroupSize;
+      if ( activity.testGroupSize === "percent" ) {
+        // count the number of record in the inbound table
+        var total = parseInt(xtk.queryDef.create(<queryDef schema={vars.targetSchema} operation="count"/>).ExecuteQuery().@count, 10);
+        testGroupSize = Math.ceil(total * (activity.testPercent/100));
+      }
+      else {
+        testGroupSize = activity.testLimit;
+      }
+      
+      var tableIndex = 1;
+      var xmlActivity = this.activityXml();
+      for each (var abtest in xmlActivity.transitions.abtest) {
+      
+        var subsetTableName = "wkf" + Math.abs(instance.id) + "_" + task.taskIdentifier + "_" + tableIndex++;
+        
+        logInfo("Preparing test target for '" + abtest.@label + "' " + subsetTableName + " (" + vars.targetSchema + ")");
+        
+        var xtkQuery = xtk.queryDef.create(
+          <queryDef schema={vars.targetSchema} operation="select" lineCount={testGroupSize}>
+            <orderBy>
+              <node expr="random()"/>
+            </orderBy>
+          </queryDef>);
+          
+        xtkQuery.SelectAll(false);
+        var xmlQuery = xtkQuery.toXML();
+        
+        var sql = "INSERT INTO " + subsetTableName + " (" 
+          + buildColumnList(vars.targetSchema, xmlQuery.select)
+          + ") " + xtkQuery.BuildQuery();
+
+        setSchemaSqlTable(vars.targetSchema, subsetTableName);
+        buildSqlTable(vars.targetSchema);
+        
+        var inserts = sqlExec(sql);
+        
+        vars.tableName    = subsetTableName;
+        vars.description  = inserts;
+        task.postEvent(task.transitionByName(abtest.@name));
+        
+        // restore the original name of the inbound table
+        setSchemaSqlTable(vars.targetSchema, inboundTableName);
+        
+        // 
+        // build the complement table
+        // 
+        var complementTableName = "wkf" + Math.abs(instance.id) + "_" + task.taskIdentifier + "_" + tableIndex++;
+        
+        var targetSchema = Application.getSchema(vars.targetSchema);
+        var exclJoin = new Array();
+        var exclCond = new Array();
+        for each (var key in targetSchema.root.keys) {
+          for each (var field in key.fields) {
+            exclJoin.push("W0." + field.SQLName + "=Excl." + field.SQLName);
+            exclCond.push("Excl." + field.SQLName + " IS NULL");
+          }
+        }
+
+        var xtkQuery = xtk.queryDef.create(<queryDef schema={vars.targetSchema} operation="select" noLineCount="1"/>);
+          
+        xtkQuery.SelectAll(false);
+        var xmlQuery = xtkQuery.toXML();
+        
+        var sql = "INSERT INTO " + complementTableName + " (" 
+          + buildColumnList(vars.targetSchema, xmlQuery.select)
+          + ") " + xtkQuery.BuildQuery() 
+          + " LEFT JOIN " + subsetTableName + " Excl ON (" + exclJoin.join(" AND ") + ")"
+          + " WHERE " + exclCond.join(" AND ");
+          
+        setSchemaSqlTable(vars.targetSchema, complementTableName);
+        buildSqlTable(vars.targetSchema);
+          
+        inserts = sqlExec(sql);
+        
+        inboundTableName = complementTableName;
+      }
+
+      activity.status = STATUS.TESTING;
+      instance.vars[activity.name + "_status"]  = STATUS.TESTING;
+      return { tableName: complementTableName, recCount: inserts };
+      
+    },
+
+    /** Compare the result of the tests and returns the winner.
+      * 
+      * return the name of the transition to the winner. */
+    compare: function() {
+    
+      var method      = methods[activity.method];
+      var winner      = undefined;
+      var deliveries  = [];
+      var errors      = 0;
+      var xmlActivity = this.activityXml();
+      
+      for (var i=0; i < activity.transitions.abtest.length; i++) {
+        
+        var abtest = activity.transitions.abtest[i];
+        var target = workflow.activities.deliveryRecurring.(@name == abtest.target);
+        var delivery = { 
+          templateId: parseInt(target.@["delivery-id"], 10),
+          transition: abtest.name,
+          version:    abtest.label
+        }
+        
+        // check if we can find a suitable test delivery
+        var testDelivery = xtk.queryDef.create(
+          <queryDef schema="nms:delivery" operation="getIfExists">
+            <select>
+              <node expr="@id"/>
+              <node expr="@state"/>
+              <node expr="[.]" alias="@_cs"/>
+              <node expr={"[indicators/@" + activity.method + "]"} alias="/@indicator"/>
+            </select>
+            <where>
+              <condition expr="[@FCP] = false"/>
+              <condition expr={"[@recurringDelivery-id] = " + delivery.templateId}/>
+            </where>
+            <orderBy>
+              <node expr="[@id]" sortDesc="true"/>
+            </orderBy>
+          </queryDef>).ExecuteQuery();
+          
+        if ( testDelivery.@id == undefined ) {
+          logWarning("Unable to find a suitable test delivery for the test '" + abtest.label + "'");        
+          errors++;
+        }
+        else if ( parseInt(testDelivery.@state, 10) <= 51 /* Start Pending */ ) {
+          logWarning("The test delivery '" + testDelivery.@_cs + "' for the test group '" + abtest.label + "' is not in a valid state");
+          errors++;
+        }
+        else {
+          delivery.id        = parseInt(testDelivery.@id, 10);
+          delivery.indicator = parseFloat(testDelivery.@indicator);
+          delivery.score     = psns.number.format(delivery.indicator * (method.format === "percent" ? 100 : 1), formatOptions[method.format]);
+          
+          if ( delivery.indicator === 0 ) {
+            logWarning("No results available for the test delivery '" + testDelivery.@_cs + "' for the test group '" + abtest.label + "'");
+            errors++
+          }
+          else if ( winner === undefined 
+            || ( method.keep === "max" && delivery.indicator > winner.indicator ) 
+            || ( method.keep === "min" && delivery.indicator < winner.indicator ) ) {
+            winner = delivery;
+          }
+          
+          deliveries.push(delivery);
+        }
+      }
+      
+      if ( errors > 0 ) {
+        logError("A/B test comparison failed");
+        return 0;
+      }
+      
+      activity.status = 2; /* Finished */
+      activity.winningVersion.version     = winner.version;
+      activity.winningVersion.transition  = winner.transition;
+      activity.winningVersion.score       = winner.score;
+      
+      instance.vars[activity.name + "_status"] = STATUS.FINISHED;
+      
+      // builld the others score variable
+      var othersScore = [];
+      for (var i=0; i < deliveries.length; i++) {
+        if ( deliveries[i].transition != winner.transition ) {
+          othersScore.push(deliveries[i].version + " (" + deliveries[i].score + ")");
+        }
+      }
+      
+      activity.winningVersion.othersScore = othersScore.join(", ");
+      return 0;
+    },
+  
+    call: function() {
+ 
+      // check if the target of the test transitions are recurring deliveries   
+      this.checkTransitions();
+
+      if ( this.status() === STATUS.FINISHED ) {
+        // this is not the fist exectution of this activity, we've already performed 
+        // the a/b test and have a winner
+        return this.recall();
+      }
+      else if ( this.status() === STATUS.TESTING ) {
+        //
+        // a new population is reaching this activity but the test is still in progress
+        // 
+        if ( activity.transitions.abcomplement.enabled === true ) {
+          // no hold of the inbound population during the test, so we pass the inbound
+          // population to the complement transition.
+          vars.description  = vars.recCount;
+          task.postEvent(task.transitionByName(activity.transitions.abcomplement.name));
+          task.setCompleted();
+        }
+        else {
+          // we need to hold the inbound population until the end of the test
+          // => merge it with the population already in hold
+          var targetOnHold  = this.targetOnHold();
+          var targetMerged  = "wkf" + Math.abs(instance.id) + "_" + task.taskIdentifier;
+          
+          var cnx = application.getConnection();
+          if ( cnx.isPostgreSQL ) {
+            cnx.execute(<sql>SELECT * INTO {targetMerged} FROM {targetOnHold} UNION ALL SELECT * FROM {vars.tableName}</sql>);
+          }
+          else if ( cnx.isPostgreSQL ) {
+            cnx.execute(<sql>CREATE TABLE {targetMerged} AS SELECT * FROM {targetOnHold} UNION ALL SELECT * FROM {vars.tableName}</sql>);
+          }
+          else {
+            logError("Database engine not supported");
+          }
+
+          cnx.dispose();
+          this.holdTarget(targetMerged);
+          logInfo("Test in progress, the new inbound population has been merged with the population already on hold");
+        }
+        
+        return 0;
+      }
+
+      var complement = this.test();
+      
+      if ( activity.transitions.abcomplement.enabled === true ) {
+        // 
+        // post an event on the complement transition
+        // 
+        vars.tableName    = complement.tableName;
+        vars.recCount     = parseInt(xtk.queryDef.create(<queryDef schema={vars.targetSchema} operation="count"/>).ExecuteQuery().@count, 10);
+        vars.description  = complement.recCount;
+        task.postEvent(task.transitionByName(activity.transitions.abcomplement.name));
+      }
+      else {
+        // 
+        // hold the complement until the result of the A/B test
+        // 
+        this.holdTarget(complement.tableName);
+      }      
+      
+      // schedule the execution of the next step (=> identification of the winner).
+      var nextProcessingDate = getCurrentDate();
+      nextProcessingDate.setTime(nextProcessingDate.getTime() + activity.duration * 1000);
+      this.setExpirationDate(nextProcessingDate);
+      task.setNextProcessingDate(nextProcessingDate);
+      return 0;
+    },
+    
+    recall: function() {
+    
+      if ( this.status() === STATUS.TESTING ) {
+      
+        if ( this.expirationDate() > getCurrentDate() ) {
+          return 0;
+        }
+        
+        // compare the test groups and find the winning versions
+        this.compare();
+        if ( activity.transitions.abcomplement.enabled === true ) {
+          // after the preparation of the test, the activity did not hold
+          // the complement population => nothing to do
+          task.setCompleted();
+          return 0;
+        }
+      }
+      
+      if ( this.status() !== STATUS.FINISHED ) {
+        logError("Invalid state");
+      }
+      
+      var targetOnHold = this.targetOnHold();
+      if ( targetOnHold != "" ) {
+        // there is a target on hold
+        // => release the target
+        vars.tableName = targetOnHold;
+        setSchemaSqlTable(vars.targetSchema, vars.tableName);
+        vars.recCount = parseInt(xtk.queryDef.create(<queryDef schema={vars.targetSchema} operation="count"/>).ExecuteQuery().@count, 10);
+        this.holdTarget("");  // no longer hold this table
+      }
+      
+      vars.description = vars.recCount;
+      task.postEvent(task.transitionByName(activity.winningVersion.transition));
+      task.setCompleted();
+      return 0;
+    }
+    
+  }
+
+})();
+
+function abtesting_call() {
+  return psns.abtesting.call();
+}
+
+function abtesting_recall() {
+  return psns.abtesting.recall();
+}]]></data>
+    </javascript>
+  </entities>
+  <entities schema="xtk:image">
+    <image entitySchema="xtk:image" img="psns:abtesting16x16.png" label="abtesting16x16.png"
+           name="abtesting16x16.png" namespace="psns">
+      <data><![CDATA[iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoTWFjaW50b3NoKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDowOTBCMDA3OUVFNzAxMUUyQkM2Q0I0N0ExMkIzNDMzNiIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDowOTBCMDA3QUVFNzAxMUUyQkM2Q0I0N0ExMkIzNDMzNiI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjA5MEIwMDc3RUU3MDExRTJCQzZDQjQ3QTEyQjM0MzM2IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjA5MEIwMDc4RUU3MDExRTJCQzZDQjQ3QTEyQjM0MzM2Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+wXpm9AAAAyFJREFUeNpsUl1IU2EYfs45002nmbPNJdNGJtMsLCtdaepFUJem9EddREQXWRCGdRMa1k1UCBUYEd0EQVQYFUFJXdg0dZYVKxX7c2mNubnO3NzP2c7p/eYKi174OA/v9z7P97zve7jylkeQ1IAQRyJUPIevAQnRcLTk3sGKLpZrvD64XaNJHSnISEFMVhJ1MnikKhJUWBCM7AxE4REjFltzla3QbNQBHB43Cbbqjt5NgDJWkJH6R4QF/zdZgtsftgydrBkoXm7Utd11oO2eA8WFS3VDLTUDbjFsmQxKidq/BFJ+kwPhksGW2j5zvj6rvWsEaSk81AKH1rvvYS7QZ9lP1Pa5xHDJQhGegW9km71sP15jI7LuDJFVJF1k0KLYqIUcj+P4rXdYZlrCnNhIxOIMRhMiXF7TfXyPhoqHmmv7l+Ubss50fcBsKIpDdWZYi3IgU79f3EFcfjoOL7m8sLcMUy6fuO5cj9WUyY8K3OqGkmfN1bbCfEN2O5HVApChUSGTwP2hKQTCMVSSkG82gnffRPSMTqPeatY0rMrdc7P380Ou2z7hWVlkzDl1x4GcdFWib9bdpC8EWVHQ3liKnEw1TtNA5yJxysmY+hlBx761+DLlmeY5nrWoICbFEI/LYDgixRP42NYVyF+ixfkHI/hBgkw8HqOaGAmBVklk4blc8WDrKv2eHVWF6Y+Hv1PPMlQ0+RSefhT62j968XZChJ5czNCwf4YkXDqwHq5p0bvvyovNvN6YN7bzhqNqOiiIZ3eXwxeIwEv9zkUkbFuTh8aNBRBoIy4xRPkwLu6vhBhVi7uuO6oMxqWjnGnTbkyKQVpJRtHLrs7+PGOW7ujVHrIroGGDCRwN5Ha/E+KchGtH6uD2zM5Y6w9bZXl23LQ4HdzCXxmGSsvrge7BXH3moqOdPQhG52ehod47m+rg8Qb8ayu3VMA9OIZ/gpYHbQKlrS4bnhADk35FqW17olS3PlGcfll5M+EPsLtkvTbJ+RPMiYZO9vx1aYX9k8835gop7DDMcsna7GQth/8EU02bd1Ja3v3KOU7nI8PJ+7R/X/4lwAA5KW4XjY/RiwAAAABJRU5ErkJggg==]]></data>
+    </image>
+    <image entitySchema="xtk:image" img="psns:abtesting48x48.png" label="abtesting48x48.png"
+           name="abtesting48x48.png" namespace="psns">
+      <data><![CDATA[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]]></data>
+    </image>
+  </entities>
+  <entities schema="xtk:specFile">
+    <specFile img="xtk:installedPackage.png" includeDefaultValues="false" includeInstallScript="false"
+              includeSpec="true" label="A/B testing worflow activity" name="abtesting"
+              namespace="psns" type="0">
+      <definition automaticDefinition="false" id="13753970930" lineCountMax="5000"
+                  schema="xtk:srcSchema">
+        <where displayFilter="name equal to 'abtestingWorkflow' and namespace equal to 'psns'">
+          <condition boolOperator="AND" compositeKey="" dependkey="" enabledIf=""
+                     expr="@name = 'abtestingWorkflow'" internalId="1375397599"/>
+          <condition compositeKey="" dependkey="" enabledIf="" expr="@namespace = 'psns'"
+                     internalId="1375397677"/>
+        </where>
+      </definition>
+      <definition automaticDefinition="false" id="13753971891" lineCountMax="5000"
+                  schema="xtk:form">
+        <where displayFilter="name equal to 'abtestingWorkflow' and namespace equal to 'psns'">
+          <condition boolOperator="AND" compositeKey="" dependkey="" enabledIf=""
+                     expr="@name = 'abtestingWorkflow'" internalId="1375397697"/>
+          <condition compositeKey="" dependkey="" enabledIf="" expr="@namespace = 'psns'"
+                     internalId="1375397713"/>
+        </where>
+      </definition>
+      <definition automaticDefinition="false" id="13753972192" lineCountMax="5000"
+                  schema="xtk:javascript">
+        <where displayFilter="name equal to 'abtesting.js'">
+          <condition compositeKey="" dependkey="" enabledIf="" expr="@name = 'abtesting.js'"
+                     internalId="1375397735"/>
+        </where>
+      </definition>
+      <definition automaticDefinition="false" id="13753972533" lineCountMax="5000"
+                  schema="xtk:image">
+        <where displayFilter="name starts with 'abtesting' and namespace equal to 'psns'">
+          <condition boolOperator="AND" compositeKey="" dependkey="" enabledIf=""
+                     expr="@name LIKE 'abtesting' + '%'" internalId="1375397784"/>
+          <condition compositeKey="" dependkey="" enabledIf="" expr="@namespace = 'psns'"
+                     internalId="1375397802"/>
+        </where>
+      </definition>
+      <properties>
+        <progress current="0" max="0"/>
+      </properties>
+    </specFile>
+  </entities>
+</package>

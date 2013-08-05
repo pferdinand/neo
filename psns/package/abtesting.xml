@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0'?>
-<package author="Philippe Ferdinand (philippe.ferdinand)" buildDate="2013-08-01 15:59:17.991Z"
+<package author="Philippe Ferdinand (philippe.ferdinand)" buildDate="2013-08-05 16:26:52.878Z"
          buildNumber="8025" buildVersion="6.1" img="xtk:installedPackage.png" label="A/B testing worflow activity"
          name="abtesting" namespace="psns" vendor="">
   <entities schema="xtk:srcSchema">
@@ -283,6 +283,8 @@ psns.abtesting  = psns.abtesting || (function() {
         xtkQuery.SelectAll(false);
         var xmlQuery = xtkQuery.toXML();
         
+        // #### PF: need to be adaped for Oracle (Oracle does apply the ROWNUM filter before the orderby 
+        //         and this breaks the random().
         var sql = "INSERT INTO " + subsetTableName + " (" 
           + buildColumnList(vars.targetSchema, xmlQuery.select)
           + ") " + xtkQuery.BuildQuery();
@@ -460,7 +462,7 @@ psns.abtesting  = psns.abtesting || (function() {
           if ( cnx.isPostgreSQL ) {
             cnx.execute(<sql>SELECT * INTO {targetMerged} FROM {targetOnHold} UNION ALL SELECT * FROM {vars.tableName}</sql>);
           }
-          else if ( cnx.isPostgreSQL ) {
+          else if ( cnx.isOracle ) {
             cnx.execute(<sql>CREATE TABLE {targetMerged} AS SELECT * FROM {targetOnHold} UNION ALL SELECT * FROM {vars.tableName}</sql>);
           }
           else {
@@ -600,6 +602,9 @@ function abtesting_recall() {
                      internalId="1375397802"/>
         </where>
       </definition>
+      <execution buildDate="2013-08-01 15:59:17.991Z" fileName="package_psns_abtesting.xml"
+                 filePath="/usr/local/neolane/nl6/var/sbox/upload/" fileSize="35160"
+                 objectCount="5"/>
       <properties>
         <progress current="0" max="0"/>
       </properties>

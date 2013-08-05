@@ -130,6 +130,8 @@ psns.abtesting  = psns.abtesting || (function() {
         xtkQuery.SelectAll(false);
         var xmlQuery = xtkQuery.toXML();
         
+        // #### PF: need to be adaped for Oracle (Oracle does apply the ROWNUM filter before the orderby 
+        //         and this breaks the random().
         var sql = "INSERT INTO " + subsetTableName + " (" 
           + buildColumnList(vars.targetSchema, xmlQuery.select)
           + ") " + xtkQuery.BuildQuery();
@@ -307,7 +309,7 @@ psns.abtesting  = psns.abtesting || (function() {
           if ( cnx.isPostgreSQL ) {
             cnx.execute(<sql>SELECT * INTO {targetMerged} FROM {targetOnHold} UNION ALL SELECT * FROM {vars.tableName}</sql>);
           }
-          else if ( cnx.isPostgreSQL ) {
+          else if ( cnx.isOracle ) {
             cnx.execute(<sql>CREATE TABLE {targetMerged} AS SELECT * FROM {targetOnHold} UNION ALL SELECT * FROM {vars.tableName}</sql>);
           }
           else {

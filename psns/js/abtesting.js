@@ -128,18 +128,25 @@ psns.abtesting  = psns.abtesting || (function() {
           </queryDef>);
           
         xtkQuery.SelectAll(false);
-        var xmlQuery = xtkQuery.toXML();
+        var xmlQuery  = xtkQuery.toXML();
+        var sqlQuery  = xtkQuery.BuildQuery();
+
+        var cnx = application.getConnection();
+        if ( cnx.isOracle ) {
+          // in oracle the ORDER BY is evaluated after the rownum so we need to perform
+          // a subselect
+          sqlQuery = "SELECT * FROM (" + sqlQuery + ") WHERE ROWNUM <= " + testGroupSize;
+        }
         
-        // #### PF: need to be adaped for Oracle (Oracle does apply the ROWNUM filter before the orderby 
-        //         and this breaks the random().
         var sql = "INSERT INTO " + subsetTableName + " (" 
           + buildColumnList(vars.targetSchema, xmlQuery.select)
-          + ") " + xtkQuery.BuildQuery();
-
+          + ") " + sqlQuery;
+          
         setSchemaSqlTable(vars.targetSchema, subsetTableName);
         buildSqlTable(vars.targetSchema);
         
-        var inserts = sqlExec(sql);
+        var inserts = cnx.execute(sql);
+        cnx.dispose();
         
         vars.tableName    = subsetTableName;
         vars.description  = inserts;

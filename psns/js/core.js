@@ -2,22 +2,54 @@
 
 var psns = psns || (function() {
 
-  var _loadedModules = [];
+  var _loadedModules = {};
   
   return {
   
     /** Load a module if required
       * 
-      * @module name of the module to load.
+      * @module  name of the module to load.
       * @return the psns object. */
     require: function(module) {
     
       if ( !_loadedModules[module] ) {
-        loadLibrary(module);
+        loadLibrary(module, true);
         this.registerModule(module);
       }
       
       return this;
+    },
+    
+    /** Unload an object in a module.
+      * 
+      * After the call of this method, the garbage collector will be able
+      * to free the memory used by this object. 
+      * 
+      * Also usefull during the developement of new object.
+      * Because JAVASCRIPT object in the namespace psns are created using 
+      * the syntax 'x || {}', if the object already exists in the JAVASCRIPT 
+      * engine, it will never be 'reloaded' even if you modify its definition
+      * in the source code. This methods allows to force the JAVASCRIPT engine 
+      * to reload it.
+      * 
+      * @vendor     the root object of the namespace (usually nlps).
+      * @module     the javascript entity where the oject is implemented.
+      * @objectName the fully qualified name of the object.
+      * 
+      * @example     psns.dispose(psns, "psns:misc.js", "psns.misc") */
+    dispose: function(vendor, module, objectName) {
+      _loadedModules[module] = false;
+      var parent = vendor;
+      var parts = objectName.split(".");
+      for (var i=1; i < parts.length-1; i++) {
+        if ( parent[parts[i]] === undefined ) {
+          // the object does not exist
+          return;
+        }
+        parent = parent[parts[i]];
+      }
+    
+      delete parent[parts[parts.length-1]];
     },
     
     /** Flag a module as loaded */
@@ -141,6 +173,19 @@ psns.string = psns.string || (function() {
       }
       
       return padding + string;
+    },
+    
+    /** Removes whitespace from both ends of the string.
+      * 
+      * @string  string to trim.
+      * @return  a new string stripped of whitespace from both ends. */
+    trim: function(string) {
+      if (!String.prototype.trim) {
+        return String(string).replace(/^\s+|\s+$/g, '');
+      }
+      else {
+        return String(string).trim();
+      }
     },
     
     /** Returns a boolean value indicating whether a string is empty.

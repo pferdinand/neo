@@ -55,56 +55,56 @@ var psns = psns || (function() {
     /** Flag a module as loaded */
     registerModule: function(module) {
       _loadedModules[module] = true;
-      psns.log("Module %1 loaded", module);
+      psns.debug("Module %1 loaded", module);
     },
     
     /** Debug logging information */
-    debug: function(f, s) {
-      logVerbose(psns.substituteString(f, s));
+    debug: function() {
+      logVerbose(psns.substituteString(arguments[0], Array.prototype.slice.call(arguments, 0)));
     },
     
     /** Informative logging information */
-    log: function(f, s) {
-      logInfo(psns.substituteString(f, s));
+    log: function() {
+      logInfo(psns.substituteString(arguments[0], Array.prototype.slice.call(arguments, 0)));
     },
     
     /** Output a warning information */
-    warn: function(f, s) {
-      logWarning(psns.substituteString(f, s));
+    warn: function() {
+      logWarning(psns.substituteString(arguments[0], Array.prototype.slice.call(arguments, 0)));
     },
     
     /** Output a warning information */
-    error: function(f, s) {
-      logError(psns.substituteString(f, s));
+    error: function() {
+      logError(psns.substituteString(arguments[0], Array.prototype.slice.call(arguments, 0)));
     },
     
     /** Subtitute parameters in a string.
       * 
       * @see psns.string.substitute(). */
-    substituteString: function(format, params) {
+    substituteString: function(format) {
     
-      if ( params === undefined ) {
+      var args = arguments;
+      if ( arguments.length === 1 ) {
         // nothing to substitute
         return format;
-      } 
-      else if ( typeof params !== "Array" ) {
-        params = new Array(params.toString());
       }
-  
-      var arg, res = "";      
+      else if ( args.length === 2 && args[1] instanceof Array ) {
+        args = args[1];
+      }
+    
+      var argNumber, res = "";
       var p, parts = format.split(/(%[%0-9]+)/g);
       
       for (var i=0; i < parts.length; i++) {
         p = parts[i];
+        if ( p.charAt(0) === "%" && p.charAt(1) !== "%" ) {
         
-        if ( p.charAt(0) === "%" ) {
-        
-          arg = parseFloat(p.substring(1));
-          if ( arg > params.length ) {
-            psns.log("out of range during substitution of the string '" + format + "' using '" + params + "'");
+          argNumber = parseInt(p.substring(1), 10);
+          if ( argNumber >= args.length ) {
+            throw("Out of range during substitution of the string '" + format + "' using " + (args.length-1) + " parameter(s)");
           }
           else {
-            res += params[arg-1];
+            res += args[argNumber];
           }
         }
         else {
@@ -133,14 +133,11 @@ psns.string = psns.string || (function() {
   
     /** Subtitute parameters in a string.
       * 
-      * @format  the string to process including the place holders. Place holders 
-      *          are %1, %2, ..., %n.
-      * @params  an array containing the value to substitute to the place holders.
-      *          if the format is referencing only one place holder, the params 
-      *          parameter can be any object with a toString() method.
+      * The string to process including the place holders. Place holders 
+      * are %1, %2, ..., %n. To display the character '%', use '%%'.
       * @example substitute("Hello %1", "World")=> "Hello World" */
-    substitute: function(format, params) {
-      return psns.substituteString(format, params);
+    substitute: function() {
+      return psns.substituteString(arguments[0], Array.prototype.slice.call(arguments, 0));
     },
 
     /** Returns an integer converted from a string.
@@ -306,6 +303,10 @@ function namespace(vendor, ns) {
 
 /** Simulate Neolane functions for non-neolane environment */
 if ( typeof logInfo === "undefined" ) {
+
+  if ( typeof console === "undefined" ) {
+    var console = { log: print, info: print, warn: print };
+  }
 
   var logVerbose = function (text) {
     console.log(text);

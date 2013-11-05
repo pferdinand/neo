@@ -221,7 +221,7 @@ psns.date = psns.date || (function() {
       * @return a string in the Neolane XML format: 1971-12-30 22:46:04.000Z */
     toXtk: function(date) {
     
-      return psns.string.padLeft(date.getUTCFullYear(), 4, "0") 
+      return (date == null) ? "" : psns.string.padLeft(date.getUTCFullYear(), 4, "0") 
         + "-" + psns.string.padLeft(date.getUTCMonth() + 1, 2, "0")
         + "-" + psns.string.padLeft(date.getUTCDate(), 2, "0")
         + " " + psns.string.padLeft(date.getUTCHours(), 2, "0")
@@ -229,7 +229,6 @@ psns.date = psns.date || (function() {
         + ":" + psns.string.padLeft(date.getUTCSeconds(), 2, "0")
         + "." + psns.string.padLeft(date.getUTCMilliseconds(), 3, "0")
         + "Z";
-        
     },
     
   }
